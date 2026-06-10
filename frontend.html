@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RealVision AI — Property Intelligence Platform</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text: #e2e8f0;
+    --muted: #8892b0;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px; background: var(--surface);
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: var(--muted); border: none; background: none; transition: all 0.2s; }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { color: var(--accent2); background: rgba(108,99,255,0.15); }
+  .status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .page { display: none; padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .hero { text-align: center; padding: 60px 20px 40px; }
+  .hero h1 { font-size: 2.8rem; font-weight: 800; background: linear-gradient(135deg, #fff, var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
+  .hero p { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 32px; }
+  .badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+  .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; border: 1px solid; }
+  .badge-purple { color: var(--accent2); border-color: var(--accent); background: rgba(108,99,255,0.1); }
+  .badge-green { color: var(--green); border-color: var(--green); background: rgba(52,211,153,0.1); }
+  .badge-yellow { color: var(--yellow); border-color: var(--yellow); background: rgba(251,191,36,0.1); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px 14px;
+    font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+  .input-group { margin-bottom: 14px; }
+  .image-inputs { display: flex; flex-direction: column; gap: 8px; }
+  .image-row { display: flex; gap: 8px; align-items: center; }
+  .image-row input { flex: 1; }
+  .img-preview { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; display: none; border: 1px solid var(--border); }
+  .btn-icon { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 1rem; line-height: 1; }
+  .btn-icon:hover { color: var(--red); border-color: var(--red); }
+
+  .btn { padding: 11px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent2); }
+  .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
+  .btn-add { background: none; border: 1px dashed var(--border); color: var(--muted); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 0.85rem; width: 100%; margin-top: 8px; transition: all 0.2s; }
+  .btn-add:hover { border-color: var(--accent); color: var(--accent2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media(max-width:768px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } .page { padding: 20px; } nav { padding: 12px 20px; } }
+
+  .score-ring { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .score-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-num { font-size: 1.3rem; font-weight: 800; }
+  .score-label { font-size: 0.65rem; color: var(--muted); }
+
+  .result-area { display: none; }
+  .result-area.visible { display: block; }
+
+  .overall-banner { background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(167,139,250,0.1)); border: 1px solid rgba(108,99,255,0.3); border-radius: var(--radius); padding: 24px; display: flex; align-items: center; gap: 24px; margin-bottom: 20px; }
+  .overall-info h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+  .overall-info p { color: var(--muted); font-size: 0.9rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; background: rgba(108,99,255,0.15); color: var(--accent2); border: 1px solid rgba(108,99,255,0.2); }
+  .tag-red { background: rgba(248,113,113,0.1); color: var(--red); border-color: rgba(248,113,113,0.2); }
+  .tag-green { background: rgba(52,211,153,0.1); color: var(--green); border-color: rgba(52,211,153,0.2); }
+
+  .room-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; gap: 16px; align-items: flex-start; }
+  .room-info { flex: 1; }
+  .room-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; text-transform: capitalize; }
+  .room-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
+  .condition-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+  .cond-excellent { background: rgba(52,211,153,0.15); color: var(--green); }
+  .cond-good { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .cond-fair { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .cond-needs_work { background: rgba(248,113,113,0.15); color: var(--red); }
+
+  .listing-box { background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 16px 20px; font-size: 0.88rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+  .valuation-box { display: flex; gap: 16px; align-items: flex-start; padding: 16px; background: var(--surface2); border-radius: 10px; }
+  .valuation-verdict { padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
+  .verdict-fairly_priced { background: rgba(52,211,153,0.15); color: var(--green); }
+  .verdict-overpriced { background: rgba(248,113,113,0.15); color: var(--red); }
+  .verdict-underpriced { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .verdict-insufficient_data { background: var(--surface); color: var(--muted); }
+
+  .chat-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+  @media(max-width:768px) { .chat-layout { grid-template-columns: 1fr; } }
+  .chat-sidebar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 160px); overflow-y: auto; }
+  .session-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); transition: all 0.2s; }
+  .session-item:hover, .session-item.active { border-color: var(--accent); background: rgba(108,99,255,0.1); }
+  .session-id { font-size: 0.8rem; color: var(--accent2); font-weight: 600; font-family: monospace; }
+  .session-preview { font-size: 0.75rem; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .chat-main { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
+  .chat-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .chat-session-label { font-size: 0.82rem; color: var(--muted); font-family: monospace; }
+  .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 320px; max-height: 480px; }
+  .msg { max-width: 80%; display: flex; flex-direction: column; gap: 4px; }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.ai { align-self: flex-start; }
+  .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 0.88rem; line-height: 1.6; }
+  .msg.user .msg-bubble { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: #fff; border-bottom-right-radius: 3px; }
+  .msg.ai .msg-bubble { background: var(--surface2); color: var(--text); border-bottom-left-radius: 3px; border: 1px solid var(--border); }
+  .msg-time { font-size: 0.7rem; color: var(--muted); }
+  .typing { display: flex; gap: 4px; align-items: center; padding: 12px 14px; background: var(--surface2); border-radius: 12px; border: 1px solid var(--border); width: fit-content; }
+  .dot { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chat-input-bar { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+  .chat-input-bar input { flex: 1; }
+  .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; color: var(--muted); gap: 8px; min-height: 200px; }
+  .empty-chat .icon { font-size: 2.5rem; }
+
+  .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media(max-width:600px){ .pref-grid { grid-template-columns: 1fr; } }
+  .prop-rank-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; gap: 16px; align-items: flex-start; margin-bottom: 12px; }
+  .rank-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; }
+  .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
+  .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+  .rank-3 { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; }
+  .rank-other { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+  .top-pick-banner { background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(16,185,129,0.05)); border: 1px solid rgba(52,211,153,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.88rem; color: var(--green); }
+
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 0.88rem; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 320px; }
+  #toast.show { opacity: 1; }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  .section-label { font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .prop-id-chip { font-family: monospace; font-size: 0.78rem; color: var(--accent2); background: rgba(108,99,255,0.1); padding: 2px 8px; border-radius: 4px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 48px 20px; }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .copy-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; }
+  .copy-btn:hover { color: var(--accent2); background: rgba(108,99,255,0.1); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🏠</div>
+    <span>RealVision <span style="color:var(--accent2)">AI</span></span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('analyze',this)">🔍 Analyze</button>
+    <button class="nav-tab" onclick="showPage('chat',this)">💬 Chat</button>
+    <button class="nav-tab" onclick="showPage('recommend',this)">⭐ Recommend</button>
+  </div>
+  <div style="font-size:0.82rem;color:var(--muted)"><span class="status-dot"></span>API Connected</div>
+</nav>
+
+<div id="toast"></div>
+
+<!-- PAGE: ANALYZE -->
+<div id="page-analyze" class="page active">
+  <div class="hero">
+    <h1>Property Intelligence</h1>
+    <p>Drop in property image URLs and get instant AI-powered room analysis, quality scores, marketing copy, and valuation insights.</p>
+    <div class="badge-row">
+      <span class="badge badge-purple">GPT-4o Vision</span>
+      <span class="badge badge-green">LangGraph Pipeline</span>
+      <span class="badge badge-yellow">Auto Valuation</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">🖼️ Property Images</div>
+        <div class="image-inputs" id="imageInputs">
+          <div class="image-row">
+            <input type="url" placeholder="https://example.com/living-room.jpg" oninput="previewImage(this)"/>
+            <img class="img-preview" alt="preview"/>
+            <button class="btn-icon" onclick="removeRow(this)">✕</button>
+          </div>
+        </div>
+        <button class="btn-add" onclick="addImageRow()">+ Add another image</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ Property Details</div>
+        <div class="input-group">
+          <label>Property Type</label>
+          <select id="propType">
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
+            <option value="condo">Condo</option>
+            <option value="townhouse">Townhouse</option>
+            <option value="commercial">Commercial</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Listing Price (USD) — optional</label>
+          <input type="number" id="listingPrice" placeholder="450000" min="0"/>
+        </div>
+        <button class="btn btn-primary" onclick="analyzeProperty()" id="analyzeBtn" style="width:100%;justify-content:center;">
+          🚀 Analyze Property
+        </button>
+      </div>
+
+      <div class="card" id="analyzedList" style="display:none;">
+        <div class="card-title">📋 Analyzed Properties</div>
+        <div id="analyzedItems" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+      <div class="empty-state"><div class="icon">🔬</div><p>Run an analysis to see results here</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: CHAT -->
+<div id="page-chat" class="page">
+  <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <h2 style="font-size:1.4rem;font-weight:700;">Property Chat</h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-top:4px;">Ask anything about an analyzed property. Memory persists across turns.</p>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="newChatSession()">+ New Session</button>
+  </div>
+
+  <div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="section-label">Sessions</div>
+      <div id="sessionList"><div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0;">No sessions yet.<br>Analyze a property first.</div></div>
+      <hr/>
+      <div class="section-label">Custom Session ID</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="customSessionId" placeholder="prop_abc123" style="font-size:0.82rem;"/>
+        <button class="btn btn-secondary btn-sm" onclick="useCustomSession()">Use</button>
+      </div>
+    </div>
+
+    <div class="chat-main">
+      <div class="chat-header">
+        <div>
+          <div style="font-weight:600;">💬 Property Assistant</div>
+          <div class="chat-session-label" id="activeSessLabel">No session selected</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="messages" id="messages">
+        <div class="empty-chat"><div class="icon">🏠</div><div>Select a session to start chatting</div></div>
+      </div>
+      <div class="chat-input-bar">
+        <input type="text" id="chatInput" placeholder="Ask about the property… e.g. 'How is the kitchen condition?'" onkeydown="if(event.key==='Enter')sendMessage()"/>
+        <button class="btn btn-primary" onclick="sendMessage()" id="sendBtn">Send →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: RECOMMEND -->
+<div id="page-recommend" class="page">
+  <div style="margin-bottom:24px;">
+    <h2 style="font-size:1.4rem;font-weight:700;">Buyer Recommendations</h2>
+    <p style="color:var(--muted);font-size:0.88rem;margin-top:4px;">Set buyer preferences to rank analyzed properties by AI match score.</p>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">👤 Buyer Preferences</div>
+        <div class="pref-grid">
+          <div class="input-group"><label>Budget Min (USD)</label><input type="number" id="budgetMin" placeholder="300000"/></div>
+          <div class="input-group"><label>Budget Max (USD)</label><input type="number" id="budgetMax" placeholder="600000"/></div>
+        </div>
+        <div class="input-group"><label>Min Quality Score (0–10)</label><input type="number" id="minQuality" placeholder="7" min="0" max="10" step="0.5"/></div>
+        <div class="input-group"><label>Must-Have Features (comma separated)</label><input type="text" id="mustHave" placeholder="open kitchen, natural light, garage"/></div>
+        <div class="input-group"><label>Style Preferences (comma separated)</label><input type="text" id="stylePrefs" placeholder="modern, contemporary"/></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🏘️ Properties to Rank</div>
+        <div id="propCheckList"><div style="color:var(--muted);font-size:0.85rem;">Analyze properties first to see them here.</div></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="getRecommendations()" id="recBtn" style="width:100%;justify-content:center;margin-bottom:20px;">⭐ Get Recommendations</button>
+    </div>
+
+    <div id="recResults">
+      <div class="empty-state"><div class="icon">⭐</div><p>Rankings will appear here</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/v1';
+let analyzedProperties = {};
+let activeChatSession = null;
+let chatSessions = [];
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = '', 3500);
+}
+
+function fmt(n) { return n != null ? parseFloat(n).toFixed(1) : 'N/A'; }
+
+function scoreColor(s) {
+  if (s >= 8) return '#34d399';
+  if (s >= 6) return '#60a5fa';
+  if (s >= 4) return '#fbbf24';
+  return '#f87171';
+}
+
+function ringPath(score, size=90, stroke=8) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * Math.min(1, score / 10);
+  const color = scoreColor(score);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#2e3350" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
+      stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function nowT() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function csv(s) { return s ? s.split(',').map(x=>x.trim()).filter(Boolean) : []; }
+
+// Image inputs
+function addImageRow() {
+  const c = document.getElementById('imageInputs');
+  const d = document.createElement('div');
+  d.className = 'image-row';
+  d.innerHTML = `<input type="url" placeholder="https://example.com/image.jpg" oninput="previewImage(this)"/>
+    <img class="img-preview" alt="preview"/>
+    <button class="btn-icon" onclick="removeRow(this)">✕</button>`;
+  c.appendChild(d);
+}
+
+function removeRow(btn) {
+  const rows = document.querySelectorAll('.image-row');
+  if (rows.length <= 1) { btn.closest('.image-row').querySelector('input').value = ''; return; }
+  btn.closest('.image-row').remove();
+}
+
+function previewImage(input) {
+  const img = input.nextElementSibling;
+  const url = input.value.trim();
+  if (url) { img.src = url; img.style.display = 'block'; img.onerror = () => img.style.display = 'none'; }
+  else img.style.display = 'none';
+}
+
+function getImageUrls() {
+  return Array.from(document.querySelectorAll('.image-row input')).map(i=>i.value.trim()).filter(Boolean);
+}
+
+// Analyze
+async function analyzeProperty() {
+  const urls = getImageUrls();
+  if (!urls.length) { toast('Add at least one image URL', 'error'); return; }
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing…';
+
+  const body = { image_urls: urls, property_type: document.getElementById('propType').value };
+  const price = parseFloat(document.getElementById('listingPrice').value);
+  if (!isNaN(price) && price > 0) body.listing_price = price;
+
+  try {
+    const res = await fetch(`${API}/analyze`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'API error'); }
+    const data = await res.json();
+    analyzedProperties[data.property_id] = data;
+    renderResult(data);
+    addAnalyzedPropItem(data);
+    updatePropCheckList();
+    if (!chatSessions.includes(data.property_id)) chatSessions.push(data.property_id);
+    renderSessionList();
+    toast(`Analysis complete! Score: ${fmt(data.overall_quality_score)}/10`);
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Analyze Property';
+  }
+}
+
+function addAnalyzedPropItem(data) {
+  const list = document.getElementById('analyzedItems');
+  const el = document.createElement('div');
+  el.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);';
+  el.innerHTML = `<div><div class="prop-id-chip">${data.property_id}</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">${data.estimated_style} · Score ${fmt(data.overall_quality_score)}/10</div></div>
+    <button class="btn btn-secondary btn-sm" onclick="loadResult('${data.property_id}')">View</button>`;
+  list.appendChild(el);
+  document.getElementById('analyzedList').style.display = 'block';
+}
+
+function loadResult(id) { if (analyzedProperties[id]) renderResult(analyzedProperties[id]); }
+
+function renderResult(data) {
+  const area = document.getElementById('resultArea');
+  area.classList.add('visible');
+
+  let verdictClass = 'verdict-fairly_priced', verdictText = 'Fairly Priced';
+  const vi = (data.valuation_insight || '').toLowerCase();
+  if (vi.includes('overpriced')) { verdictClass = 'verdict-overpriced'; verdictText = 'Overpriced'; }
+  else if (vi.includes('underpriced')) { verdictClass = 'verdict-underpriced'; verdictText = 'Underpriced'; }
+  else if (vi.includes('insufficient')) { verdictClass = 'verdict-insufficient_data'; verdictText = 'Insufficient Data'; }
+
+  const roomsHtml = (data.rooms || []).map(r => `
+    <div class="room-card">
+      <div class="score-ring">
+        ${ringPath(r.quality_score, 72, 6)}
+        <div class="score-text">
+          <div class="score-num" style="font-size:1rem;color:${scoreColor(r.quality_score)}">${fmt(r.quality_score)}</div>
+          <div class="score-label">score</div>
+        </div>
+      </div>
+      <div class="room-info">
+        <div class="room-name">${r.room_type.replace(/_/g,' ')}</div>
+        <div style="margin-bottom:6px;"><span class="condition-pill cond-${r.condition}">${r.condition.replace('_',' ')}</span></div>
+        <div class="room-desc">${r.description}</div>
+        <div class="tags">${(r.detected_features||[]).slice(0,5).map(f=>`<span class="tag">${f}</span>`).join('')}</div>
+        ${r.improvement_suggestions?.length ? `<div style="margin-top:8px;font-size:0.78rem;color:var(--muted);">💡 ${r.improvement_suggestions[0]}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  area.innerHTML = `
+    <div class="overall-banner">
+      <div class="score-ring">${ringPath(data.overall_quality_score)}<div class="score-text">
+        <div class="score-num" style="color:${scoreColor(data.overall_quality_score)}">${fmt(data.overall_quality_score)}</div>
+        <div class="score-label">/10</div></div></div>
+      <div class="overall-info">
+        <h2>${data.estimated_style.charAt(0).toUpperCase()+data.estimated_style.slice(1)} Property</h2>
+        <p>${data.total_rooms_detected} room${data.total_rooms_detected!==1?'s':''} detected · <span class="prop-id-chip">${data.property_id}</span></p>
+        <div class="tags" style="margin-top:8px;">
+          ${(data.key_selling_points||[]).slice(0,4).map(p=>`<span class="tag tag-green">✓ ${p}</span>`).join('')}
+          ${(data.potential_concerns||[]).slice(0,2).map(c=>`<span class="tag tag-red">⚠ ${c}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="openChatForProp('${data.property_id}')">💬 Chat about this property</button>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('${data.property_id}').then(()=>toast('ID copied!'))">📋 Copy ID</button>
+    </div>
+    <div class="section-label">Room Analysis</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">${roomsHtml || '<div style="color:var(--muted);font-size:0.85rem;">No rooms detected</div>'}</div>
+    <div class="section-label">AI Generated Listing</div>
+    <div class="listing-box" style="margin-bottom:20px;">${data.ai_generated_listing || 'Not available'}</div>
+    <div class="section-label">Valuation Insight</div>
+    <div class="valuation-box">
+      <span class="valuation-verdict ${verdictClass}">${verdictText}</span>
+      <div style="font-size:0.86rem;line-height:1.6;color:var(--muted);">${data.valuation_insight || 'Not available'}</div>
+    </div>`;
+}
+
+// Chat
+function openChatForProp(id) {
+  if (!chatSessions.includes(id)) chatSessions.push(id);
+  activeChatSession = id;
+  showPage('chat', document.querySelectorAll('.nav-tab')[1]);
+  renderSessionList();
+  openSession(id);
+}
+
+function renderSessionList() {
+  const list = document.getElementById('sessionList');
+  if (!chatSessions.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px 0;">No sessions yet.</div>';
+    return;
+  }
+  list.innerHTML = chatSessions.map(id => {
+    const prop = analyzedProperties[id];
+    const preview = prop ? `${prop.estimated_style} · ${fmt(prop.overall_quality_score)}/10` : 'Custom session';
+    return `<div class="session-item ${activeChatSession===id?'active':''}" onclick="openSession('${id}')">
+      <div class="session-id">${id}</div><div class="session-preview">${preview}</div></div>`;
+  }).join('');
+}
+
+function openSession(id) {
+  activeChatSession = id;
+  document.getElementById('activeSessLabel').textContent = id;
+  document.getElementById('messages').innerHTML = `
+    <div class="msg ai">
+      <div class="msg-bubble">👋 Hi! I'm your RealVision assistant for property <strong>${id}</strong>. Ask me anything about this property!</div>
+      <div class="msg-time">${nowT()}</div>
+    </div>`;
+  renderSessionList();
+}
+
+function newChatSession() {
+  const id = 'custom_' + Date.now();
+  chatSessions.push(id);
+  openSession(id);
+}
+
+function useCustomSession() {
+  const id = document.getElementById('customSessionId').value.trim();
+  if (!id) { toast('Enter a session ID', 'error'); return; }
+  if (!chatSessions.includes(id)) chatSessions.push(id);
+  openSession(id);
+  renderSessionList();
+}
+
+function clearChat() {
+  document.getElementById('messages').innerHTML = `<div class="empty-chat"><div class="icon">🏠</div><div>Chat cleared</div></div>`;
+}
+
+function appendMessage(role, text) {
+  const msgs = document.getElementById('messages');
+  msgs.querySelector('.empty-chat')?.remove();
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-time">${nowT()}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function sendMessage() {
+  if (!activeChatSession) { toast('Select a session first', 'error'); return; }
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMessage('user', msg);
+  showTyping();
+  document.getElementById('sendBtn').disabled = true;
+  try {
+    const res = await fetch(`${API}/chat`, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: activeChatSession, message: msg }) });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'Chat error'); }
+    const data = await res.json();
+    document.getElementById('typing-indicator')?.remove();
+    appendMessage('ai', data.answer.replace(/\n/g,'<br/>'));
+  } catch(e) {
+    document.getElementById('typing-indicator')?.remove();
+    appendMessage('ai', '⚠️ Error: ' + e.message);
+  } finally {
+    document.getElementById('sendBtn').disabled = false;
+    input.focus();
+  }
+}
+
+// Recommend
+function updatePropCheckList() {
+  const list = document.getElementById('propCheckList');
+  const ids = Object.keys(analyzedProperties);
+  if (!ids.length) { list.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;">Analyze properties first.</div>'; return; }
+  list.innerHTML = ids.map(id => {
+    const p = analyzedProperties[id];
+    return `<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);">
+      <input type="checkbox" value="${id}" checked style="width:auto;accent-color:var(--accent)"/>
+      <div><div class="prop-id-chip">${id}</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${p.estimated_style} · ${fmt(p.overall_quality_score)}/10</div></div>
+    </label>`;
+  }).join('');
+}
+
+async function getRecommendations() {
+  const checked = Array.from(document.querySelectorAll('#propCheckList input:checked')).map(i=>i.value);
+  if (!checked.length) { toast('Select at least one property', 'error'); return; }
+  const btn = document.getElementById('recBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Ranking…';
+  try {
+    const res = await fetch(`${API}/recommend`, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        buyer_preferences: {
+          budget_min: parseFloat(document.getElementById('budgetMin').value) || 0,
+          budget_max: parseFloat(document.getElementById('budgetMax').value) || 9999999,
+          min_quality_score: parseFloat(document.getElementById('minQuality').value) || 6,
+          must_have_features: csv(document.getElementById('mustHave').value),
+          style_preferences: csv(document.getElementById('stylePrefs').value),
+          preferred_rooms: []
+        },
+        candidate_property_ids: checked
+      })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail || 'API error'); }
+    const data = await res.json();
+    renderRecommendations(data);
+    toast('Rankings ready!');
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '⭐ Get Recommendations';
+  }
+}
+
+function renderRecommendations(data) {
+  const area = document.getElementById('recResults');
+  const ranks = data.ranked_properties || [];
+  const cards = ranks.map((p, i) => {
+    const rankClass = ['rank-1','rank-2','rank-3'][i] || 'rank-other';
+    const prop = analyzedProperties[p.property_id];
+    return `<div class="prop-rank-card">
+      <div class="rank-badge ${rankClass}">${i+1}</div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span class="prop-id-chip">${p.property_id}</span>
+          <span style="font-size:0.85rem;color:${scoreColor(p.match_score)};font-weight:700;">Match: ${fmt(p.match_score)}/10</span>
+          ${prop ? `<span style="color:var(--muted);font-size:0.78rem;">${prop.estimated_style}</span>` : ''}
+        </div>
+        ${p.match_reasons?.length ? `<div class="tags" style="margin-bottom:6px;">${p.match_reasons.slice(0,3).map(r=>`<span class="tag tag-green">✓ ${r}</span>`).join('')}</div>` : ''}
+        ${p.concerns?.length ? `<div class="tags">${p.concerns.slice(0,2).map(c=>`<span class="tag tag-red">⚠ ${c}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  area.innerHTML = `
+    <div class="top-pick-banner">🏆 Top Pick: <strong>${data.top_pick_id}</strong> — ${data.recommendation_summary}</div>
+    <div class="section-label">Ranked Properties</div>
+    ${cards}`;
+}
+</script>
+</body>
+</html>
